@@ -46,6 +46,16 @@ UART_HandleTypeDef huart1;
 
 /* USER CODE BEGIN PV */
 uint16_t millis = 0;
+uint16_t m_millis = 0;
+uint16_t m_pulse_period = 20;
+uint8_t m0_direction = 0;
+uint8_t m1_direction = 0;
+uint8_t m0_enable = 0;
+uint8_t m1_enable = 0;
+
+uint16_t test_millis = 0;
+uint16_t test_period = 5000;
+uint8_t test_mode = 0;
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -55,6 +65,7 @@ static void MX_TIM1_Init(void);
 static void MX_USART1_UART_Init(void);
 /* USER CODE BEGIN PFP */
 void One_Second_Tick(void);
+void Move_Engines(void);
 /* USER CODE END PFP */
 
 /* Private user code ---------------------------------------------------------*/
@@ -104,7 +115,23 @@ int main(void)
   while (1)
   {
     /* USER CODE END WHILE */
-
+// HAL_GPIO_WritePin(GPIOA, M0_Direction_Pin, GPIO_PIN_SET);//Clock wise rotation
+		
+// 		for(int i=1;i<=200;i++){  //Moving stepper motor forward
+// 			HAL_GPIO_WritePin(GPIOA, M0_Pulse_Pin, GPIO_PIN_SET);
+// 			HAL_Delay(50);
+// 			HAL_GPIO_WritePin(GPIOA, M0_Pulse_Pin, GPIO_PIN_RESET);
+// 			HAL_Delay(50);
+// 		}
+		
+// 	HAL_GPIO_WritePin(GPIOA, M0_Direction_Pin, GPIO_PIN_RESET);//Anti clock wise rotation
+		
+// 		for(int j=1;j<=200;j++){  //Moving stepper motor forward
+// 			HAL_GPIO_WritePin(GPIOA, M0_Pulse_Pin, GPIO_PIN_SET);
+// 			HAL_Delay(50);
+// 			HAL_GPIO_WritePin(GPIOA, M0_Pulse_Pin, GPIO_PIN_RESET);
+// 			HAL_Delay(50);
+// 		}
     /* USER CODE BEGIN 3 */
   }
   /* USER CODE END 3 */
@@ -244,10 +271,10 @@ static void MX_GPIO_Init(void)
   __HAL_RCC_GPIOA_CLK_ENABLE();
 
   /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(GPIOA, GPIO_PIN_1|GPIO_PIN_2|GPIO_PIN_3|GPIO_PIN_4, GPIO_PIN_RESET);
+  HAL_GPIO_WritePin(GPIOA, M0_Direction_Pin|M0_Pulse_Pin|M1_Direction_Pin|M1_Pulse_Pin, GPIO_PIN_RESET);
 
-  /*Configure GPIO pins : PA1 PA2 PA3 PA4 */
-  GPIO_InitStruct.Pin = GPIO_PIN_1|GPIO_PIN_2|GPIO_PIN_3|GPIO_PIN_4;
+  /*Configure GPIO pins : M0_Direction_Pin M0_Pulse_Pin M1_Direction_Pin M1_Pulse_Pin */
+  GPIO_InitStruct.Pin = M0_Direction_Pin|M0_Pulse_Pin|M1_Direction_Pin|M1_Pulse_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
@@ -263,11 +290,57 @@ static void MX_GPIO_Init(void)
 void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim){
 
 	if(htim == &htim1){ //Check if it's TIM1
-		millis++;
+		//One second timer action
+    millis++;
 		if (millis == 1000){
 			millis = 0;
 			One_Second_Tick();
 		}
+
+    //Engime moving action
+    m_millis++;
+    if (m_millis >= m_pulse_period){
+      m_millis = 0;
+      Move_Engines();
+    }
+
+    //Switch test state
+    test_millis++;
+    if (test_millis >= test_period){
+      test_millis = 0;
+
+      switch (test_mode){
+        case 0:
+          USART1->DR = 0x30;
+          test_mode = 1;
+          m0_direction = 0;
+          m0_enable = 1;
+          break;
+
+        case 1:
+          USART1->DR = 0x31;
+          test_mode = 2;
+          m0_direction = 0;
+          m0_enable = 0;
+          break;
+          break;
+
+        case 2:
+          USART1->DR = 0x32;
+          test_mode = 3;
+          m0_direction = 1;
+          m0_enable = 1;
+          break;
+
+
+        default:
+          USART1->DR = 0x33;
+          test_mode = 0;
+          m0_direction = 1;
+          m0_enable = 0;
+          break;
+      }
+    }
 	}
 }
 
@@ -276,6 +349,19 @@ void One_Second_Tick(void){
 
 	USART1->DR = 0x2E; //Send char '.' to UART (to test that UART and timer work)
 
+}
+
+void Move_Engines(void){
+  if (m0_enable){
+    HAL_GPIO_WritePin(GPIOA, M0_Direction_Pin, m0_direction);
+    if (HAL_GPIO_ReadPin(GPIOA, M0_Pulse_Pin)) HAL_GPIO_WritePin(GPIOA, M0_Pulse_Pin, GPIO_PIN_RESET);
+    else HAL_GPIO_WritePin(GPIOA, M0_Pulse_Pin, GPIO_PIN_SET);
+  }
+  if (m1_enable){
+    HAL_GPIO_WritePin(GPIOA, M1_Direction_Pin, m1_direction);
+    if (HAL_GPIO_ReadPin(GPIOA, M1_Pulse_Pin)) HAL_GPIO_WritePin(GPIOA, M1_Pulse_Pin, GPIO_PIN_RESET);
+    else HAL_GPIO_WritePin(GPIOA, M1_Pulse_Pin, GPIO_PIN_SET);
+  }
 }
 
 /* USER CODE END 4 */

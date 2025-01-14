@@ -57,6 +57,14 @@ void Error_Handler(void);
 /* USER CODE END EFP */
 
 /* Private defines -----------------------------------------------------------*/
+#define M0_Direction_Pin GPIO_PIN_1
+#define M0_Direction_GPIO_Port GPIOA
+#define M0_Pulse_Pin GPIO_PIN_2
+#define M0_Pulse_GPIO_Port GPIOA
+#define M1_Direction_Pin GPIO_PIN_3
+#define M1_Direction_GPIO_Port GPIOA
+#define M1_Pulse_Pin GPIO_PIN_4
+#define M1_Pulse_GPIO_Port GPIOA
 
 /* USER CODE BEGIN Private defines */
 
