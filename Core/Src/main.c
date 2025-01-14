@@ -298,6 +298,10 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim){
 
     m0_enable = HAL_GPIO_ReadPin(GPIOA, STOPPER_LEFT_Pin);
 
+    //Reset pulse pins
+    if (HAL_GPIO_ReadPin(GPIOA, M0_Pulse_Pin)) HAL_GPIO_WritePin(GPIOA, M0_Pulse_Pin, GPIO_PIN_RESET);
+    if (HAL_GPIO_ReadPin(GPIOA, M1_Pulse_Pin)) HAL_GPIO_WritePin(GPIOA, M1_Pulse_Pin, GPIO_PIN_RESET);
+    
     //Switch test state
     //test_millis++;
     if (test_millis >= test_period){
@@ -355,13 +359,11 @@ void One_Second_Tick(void){
 void Move_Engines(void){
   if (m0_enable){
     HAL_GPIO_WritePin(GPIOA, M0_Direction_Pin, m0_direction);
-    if (HAL_GPIO_ReadPin(GPIOA, M0_Pulse_Pin)) HAL_GPIO_WritePin(GPIOA, M0_Pulse_Pin, GPIO_PIN_RESET);
-    else HAL_GPIO_WritePin(GPIOA, M0_Pulse_Pin, GPIO_PIN_SET);
+    HAL_GPIO_WritePin(GPIOA, M0_Pulse_Pin, GPIO_PIN_SET);
   }
   if (m1_enable){
     HAL_GPIO_WritePin(GPIOA, M1_Direction_Pin, m1_direction);
-    if (HAL_GPIO_ReadPin(GPIOA, M1_Pulse_Pin)) HAL_GPIO_WritePin(GPIOA, M1_Pulse_Pin, GPIO_PIN_RESET);
-    else HAL_GPIO_WritePin(GPIOA, M1_Pulse_Pin, GPIO_PIN_SET);
+    HAL_GPIO_WritePin(GPIOA, M1_Pulse_Pin, GPIO_PIN_SET);
   }
 }
 
@@ -438,10 +440,15 @@ BOT_Direction Validate_Direction(BOT_Direction direction){
     switch (direction){
       case DIR_LEFT:
         direction = DIR_STOP;
+        break;
       case DIR_BOTTOM_LEFT:
         direction = DIR_BOTTOM;
+        break;
       case DIR_TOP_LEFT:
         direction = DIR_TOP;
+        break;
+      default:
+        break;
     }
   }
 
@@ -449,10 +456,15 @@ BOT_Direction Validate_Direction(BOT_Direction direction){
     switch (direction){
       case DIR_RIGHT:
         direction = DIR_STOP;
+        break;
       case DIR_BOTTOM_RIGHT:
         direction = DIR_BOTTOM;
+        break;
       case DIR_TOP_RIGHT:
         direction = DIR_TOP;
+        break;
+      default:
+        break;
     }
   }
 
@@ -460,10 +472,15 @@ BOT_Direction Validate_Direction(BOT_Direction direction){
     switch (direction){
       case DIR_TOP:
         direction = DIR_STOP;
+        break;
       case DIR_TOP_LEFT:
         direction = DIR_LEFT;
+        break;
       case DIR_TOP_RIGHT:
         direction = DIR_RIGHT;
+        break;
+      default:
+        break;
     }
   }
 
@@ -471,10 +488,15 @@ BOT_Direction Validate_Direction(BOT_Direction direction){
     switch (direction){
       case DIR_BOTTOM:
         direction = DIR_STOP;
+        break;
       case DIR_BOTTOM_LEFT:
         direction = DIR_LEFT;
+        break;
       case DIR_BOTTOM_RIGHT:
         direction = DIR_RIGHT;
+        break;
+      default:
+        break;
     }
   }
 
