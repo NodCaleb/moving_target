@@ -36,7 +36,18 @@ extern "C" {
 
 /* Exported types ------------------------------------------------------------*/
 /* USER CODE BEGIN ET */
-
+typedef enum
+{
+  DIR_STOP = 0u,
+  DIR_TOP,
+  DIR_TOP_RIGHT,
+  DIR_RIGHT,
+  DIR_BOTTOM_RIGHT,
+  DIR_BOTTOM,
+  DIR_BOTTOM_LEFT,
+  DIR_LEFT,
+  DIR_TOP_LEFT
+} BOT_Direction;
 /* USER CODE END ET */
 
 /* Exported constants --------------------------------------------------------*/
@@ -65,6 +76,14 @@ void Error_Handler(void);
 #define M1_Direction_GPIO_Port GPIOA
 #define M1_Pulse_Pin GPIO_PIN_4
 #define M1_Pulse_GPIO_Port GPIOA
+#define STOPPER_LEFT_Pin GPIO_PIN_5
+#define STOPPER_LEFT_GPIO_Port GPIOA
+#define STOPPER_RIGHT_Pin GPIO_PIN_6
+#define STOPPER_RIGHT_GPIO_Port GPIOA
+#define STOPPER_TOP_Pin GPIO_PIN_7
+#define STOPPER_TOP_GPIO_Port GPIOA
+#define STOPPER_BOTTOM_Pin GPIO_PIN_8
+#define STOPPER_BOTTOM_GPIO_Port GPIOA
 
 /* USER CODE BEGIN Private defines */
 

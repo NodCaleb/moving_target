@@ -66,6 +66,8 @@ static void MX_USART1_UART_Init(void);
 /* USER CODE BEGIN PFP */
 void One_Second_Tick(void);
 void Move_Engines(void);
+void Set_Engine_Modes(BOT_Direction direction);
+BOT_Direction Validate_Direction(BOT_Direction direction);
 /* USER CODE END PFP */
 
 /* Private user code ---------------------------------------------------------*/
@@ -115,23 +117,7 @@ int main(void)
   while (1)
   {
     /* USER CODE END WHILE */
-// HAL_GPIO_WritePin(GPIOA, M0_Direction_Pin, GPIO_PIN_SET);//Clock wise rotation
-		
-// 		for(int i=1;i<=200;i++){  //Moving stepper motor forward
-// 			HAL_GPIO_WritePin(GPIOA, M0_Pulse_Pin, GPIO_PIN_SET);
-// 			HAL_Delay(50);
-// 			HAL_GPIO_WritePin(GPIOA, M0_Pulse_Pin, GPIO_PIN_RESET);
-// 			HAL_Delay(50);
-// 		}
-		
-// 	HAL_GPIO_WritePin(GPIOA, M0_Direction_Pin, GPIO_PIN_RESET);//Anti clock wise rotation
-		
-// 		for(int j=1;j<=200;j++){  //Moving stepper motor forward
-// 			HAL_GPIO_WritePin(GPIOA, M0_Pulse_Pin, GPIO_PIN_SET);
-// 			HAL_Delay(50);
-// 			HAL_GPIO_WritePin(GPIOA, M0_Pulse_Pin, GPIO_PIN_RESET);
-// 			HAL_Delay(50);
-// 		}
+
     /* USER CODE BEGIN 3 */
   }
   /* USER CODE END 3 */
@@ -280,6 +266,12 @@ static void MX_GPIO_Init(void)
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
   HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
 
+  /*Configure GPIO pins : STOPPER_LEFT_Pin STOPPER_RIGHT_Pin STOPPER_TOP_Pin STOPPER_BOTTOM_Pin */
+  GPIO_InitStruct.Pin = STOPPER_LEFT_Pin|STOPPER_RIGHT_Pin|STOPPER_TOP_Pin|STOPPER_BOTTOM_Pin;
+  GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
+
 /* USER CODE BEGIN MX_GPIO_Init_2 */
 /* USER CODE END MX_GPIO_Init_2 */
 }
@@ -304,8 +296,10 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim){
       Move_Engines();
     }
 
+    m0_enable = HAL_GPIO_ReadPin(GPIOA, STOPPER_LEFT_Pin);
+
     //Switch test state
-    test_millis++;
+    //test_millis++;
     if (test_millis >= test_period){
       test_millis = 0;
 
@@ -315,6 +309,8 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim){
           test_mode = 1;
           m0_direction = 0;
           m0_enable = 1;
+          m1_direction = 0;
+          m1_enable = 0;
           break;
 
         case 1:
@@ -322,7 +318,8 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim){
           test_mode = 2;
           m0_direction = 0;
           m0_enable = 0;
-          break;
+          m1_direction = 0;
+          m1_enable = 1;
           break;
 
         case 2:
@@ -330,6 +327,8 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim){
           test_mode = 3;
           m0_direction = 1;
           m0_enable = 1;
+          m1_direction = 0;
+          m1_enable = 0;
           break;
 
 
@@ -338,6 +337,8 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim){
           test_mode = 0;
           m0_direction = 1;
           m0_enable = 0;
+          m1_direction = 1;
+          m1_enable = 1;
           break;
       }
     }
@@ -362,6 +363,123 @@ void Move_Engines(void){
     if (HAL_GPIO_ReadPin(GPIOA, M1_Pulse_Pin)) HAL_GPIO_WritePin(GPIOA, M1_Pulse_Pin, GPIO_PIN_RESET);
     else HAL_GPIO_WritePin(GPIOA, M1_Pulse_Pin, GPIO_PIN_SET);
   }
+}
+
+void Set_Engine_Modes(BOT_Direction direction){
+	switch (direction){
+    
+    case DIR_STOP:
+      m0_enable = 0;
+      m1_enable = 0;
+      break;
+
+    case DIR_TOP:
+      m0_enable = 1;
+      m0_direction = 1;
+      m1_enable = 1;
+      m1_direction = 0;
+      break;
+      
+    case DIR_TOP_RIGHT:
+      m0_enable = 0;
+      m0_direction = 0;
+      m1_enable = 1;
+      m1_direction = 0;
+      break;
+      
+    case DIR_RIGHT:
+      m0_enable = 1;
+      m0_direction = 0;
+      m1_enable = 1;
+      m1_direction = 0;
+      break;
+      
+    case DIR_BOTTOM_RIGHT:
+      m0_enable = 1;
+      m0_direction = 0;
+      m1_enable = 0;
+      m1_direction = 0;
+      break;
+      
+    case DIR_BOTTOM:
+      m0_enable = 1;
+      m0_direction = 0;
+      m1_enable = 1;
+      m1_direction = 1;
+      break;
+      
+    case DIR_BOTTOM_LEFT:
+      m0_enable = 0;
+      m0_direction = 0;
+      m1_enable = 1;
+      m1_direction = 1;
+      break;
+      
+    case DIR_LEFT:
+      m0_enable = 1;
+      m0_direction = 1;
+      m1_enable = 1;
+      m1_direction = 1;
+      break;
+      
+    case DIR_TOP_LEFT:
+      m0_enable = 1;
+      m0_direction = 1;
+      m1_enable = 0;
+      m1_direction = 0;
+      break;
+      
+	}
+}
+
+BOT_Direction Validate_Direction(BOT_Direction direction){
+  
+  if (HAL_GPIO_ReadPin(GPIOA, STOPPER_LEFT_Pin)){
+    switch (direction){
+      case DIR_LEFT:
+        direction = DIR_STOP;
+      case DIR_BOTTOM_LEFT:
+        direction = DIR_BOTTOM;
+      case DIR_TOP_LEFT:
+        direction = DIR_TOP;
+    }
+  }
+
+  if (HAL_GPIO_ReadPin(GPIOA, STOPPER_RIGHT_Pin)){
+    switch (direction){
+      case DIR_RIGHT:
+        direction = DIR_STOP;
+      case DIR_BOTTOM_RIGHT:
+        direction = DIR_BOTTOM;
+      case DIR_TOP_RIGHT:
+        direction = DIR_TOP;
+    }
+  }
+
+  if (HAL_GPIO_ReadPin(GPIOA, STOPPER_TOP_Pin)){
+    switch (direction){
+      case DIR_TOP:
+        direction = DIR_STOP;
+      case DIR_TOP_LEFT:
+        direction = DIR_LEFT;
+      case DIR_TOP_RIGHT:
+        direction = DIR_RIGHT;
+    }
+  }
+
+  if (HAL_GPIO_ReadPin(GPIOA, STOPPER_BOTTOM_Pin)){
+    switch (direction){
+      case DIR_BOTTOM:
+        direction = DIR_STOP;
+      case DIR_BOTTOM_LEFT:
+        direction = DIR_LEFT;
+      case DIR_BOTTOM_RIGHT:
+        direction = DIR_RIGHT;
+    }
+  }
+
+  return direction;
+
 }
 
 /* USER CODE END 4 */
